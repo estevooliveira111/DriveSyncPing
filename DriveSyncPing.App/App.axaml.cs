@@ -31,6 +31,9 @@ public partial class App : Avalonia.Application
         services.AddSingleton<IGoogleAuthService, GoogleAuthService>();
         services.AddTransient<IGoogleDriveService, GoogleDriveService>();
         services.AddTransient<ISyncService, SyncService>();
+        services.AddTransient<ISettingsService, SettingsService>();
+        services.AddTransient<IHistoryService, HistoryService>();
+        services.AddTransient<IScheduleService, ScheduleService>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();

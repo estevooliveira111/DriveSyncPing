@@ -6,5 +6,7 @@ public enum SyncStatus
     Uploading,
     Synced,
     Failed,
-    Ignored
+    Ignored,
+    Validated,
+    Deleted
 }

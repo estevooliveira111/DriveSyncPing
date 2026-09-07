@@ -5,5 +5,12 @@ public enum OperationType
     Upload,
     DeleteLocal,
     Ignore,
-    Error
+    Error,
+    SyncStarted,
+    SyncCompleted,
+    ValidationPassed,
+    ValidationFailed,
+    Cancelled,
+    DryRunUpload,
+    DryRunDelete
 }

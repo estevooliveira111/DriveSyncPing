@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     public DbSet<SyncFile> SyncFiles => Set<SyncFile>();
     public DbSet<SyncJob> SyncJobs => Set<SyncJob>();
     public DbSet<SyncOperation> SyncOperations => Set<SyncOperation>();
+    public DbSet<ScheduleConfig> ScheduleConfigs => Set<ScheduleConfig>();
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -54,6 +55,11 @@ public class AppDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.SyncFileId)
                   .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<ScheduleConfig>(entity =>
+        {
+            entity.HasKey(e => e.Id);
         });
     }
 }
