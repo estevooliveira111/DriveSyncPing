@@ -18,6 +18,9 @@ public sealed class SyncRunOptions
     /// <summary>What started the run (manual button vs. scheduler).</summary>
     public SyncTrigger Trigger { get; init; } = SyncTrigger.Manual;
 
+    /// <summary>Name of the top-level Drive folder that receives every synced folder.</summary>
+    public string DriveFolderName { get; init; } = AppSettings.DefaultDriveFolderName;
+
     public static SyncRunOptions Default => new();
 }
 

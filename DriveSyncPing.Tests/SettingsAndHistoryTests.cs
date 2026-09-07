@@ -21,6 +21,7 @@ public class SettingsServiceTests
 
         settings.DeleteAfterUpload.Should().BeFalse();
         settings.DryRunByDefault.Should().BeFalse();
+        settings.DriveFolderName.Should().Be(AppSettings.DefaultDriveFolderName);
     }
 
     [Fact]
@@ -29,24 +30,32 @@ public class SettingsServiceTests
         using var db = new TestDatabase();
 
         await using (var ctx = db.CreateContext())
-            await new SettingsService(ctx).SaveAsync(new AppSettings { DeleteAfterUpload = true, DryRunByDefault = true });
+            await new SettingsService(ctx).SaveAsync(new AppSettings
+            {
+                DeleteAfterUpload = true, DryRunByDefault = true, DriveFolderName = "Backup Fotos"
+            });
 
         await using (var ctx = db.CreateContext())
         {
             var settings = await new SettingsService(ctx).GetAsync();
             settings.DeleteAfterUpload.Should().BeTrue();
             settings.DryRunByDefault.Should().BeTrue();
+            settings.DriveFolderName.Should().Be("Backup Fotos");
         }
 
         await using (var ctx = db.CreateContext())
-            await new SettingsService(ctx).SaveAsync(new AppSettings { DeleteAfterUpload = false, DryRunByDefault = true });
+            await new SettingsService(ctx).SaveAsync(new AppSettings
+            {
+                DeleteAfterUpload = false, DryRunByDefault = true, DriveFolderName = "   "
+            });
 
         await using (var ctx = db.CreateContext())
         {
             var settings = await new SettingsService(ctx).GetAsync();
             settings.DeleteAfterUpload.Should().BeFalse();
             settings.DryRunByDefault.Should().BeTrue();
-            ctx.Configurations.Should().HaveCount(2); // rows updated, not duplicated
+            settings.DriveFolderName.Should().Be(AppSettings.DefaultDriveFolderName); // blank falls back
+            ctx.Configurations.Should().HaveCount(3); // rows updated, not duplicated
         }
     }
 }

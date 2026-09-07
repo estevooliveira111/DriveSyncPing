@@ -16,6 +16,14 @@ public class SyncServiceTests
 {
     private static void NoProgress(string _, int __) { }
 
+    /// <summary>Resolves the "&lt;driveName&gt;/&lt;localFolderName&gt;" folder id in the fake Drive.</summary>
+    private static async Task<string> ResolveRemoteFolderAsync(
+        FakeGoogleDriveService drive, string localRoot, string driveName = AppSettings.DefaultDriveFolderName)
+    {
+        var rootId = await drive.CreateFolderAsync(driveName);
+        return (await drive.CreateFolderAsync(new DirectoryInfo(localRoot).Name, rootId))!;
+    }
+
     private static async Task<SyncFolder> AddFolderAsync(TestDatabase db, string path, OrganizationRule rule = OrganizationRule.None)
     {
         await using var ctx = db.CreateContext();
@@ -62,8 +70,8 @@ public class SyncServiceTests
         await AddFolderAsync(db, ws.Root);
 
         var drive = new FakeGoogleDriveService();
-        var rootId = await drive.CreateFolderAsync(new DirectoryInfo(ws.Root).Name);
-        drive.SeedFile(rootId!, "dup.txt", 12, TempWorkspace.Sha256("same-content"));
+        var targetId = await ResolveRemoteFolderAsync(drive, ws.Root);
+        drive.SeedFile(targetId, "dup.txt", 12, TempWorkspace.Sha256("same-content"));
 
         await using var ctx = db.CreateContext();
         var job = await new SyncService(ctx, drive).RunSyncAsync(new SyncRunOptions(), NoProgress);
@@ -86,8 +94,8 @@ public class SyncServiceTests
         await AddFolderAsync(db, ws.Root);
 
         var drive = new FakeGoogleDriveService();
-        var rootId = await drive.CreateFolderAsync(new DirectoryInfo(ws.Root).Name);
-        drive.SeedFile(rootId!, "x.bin", 5, sha256: null); // same size, unknown hash
+        var targetId = await ResolveRemoteFolderAsync(drive, ws.Root);
+        drive.SeedFile(targetId, "x.bin", 5, sha256: null); // same size, unknown hash
 
         await using var ctx = db.CreateContext();
         var job = await new SyncService(ctx, drive)
@@ -258,11 +266,50 @@ public class SyncServiceTests
         var job = await new SyncService(ctx, drive).RunSyncAsync(new SyncRunOptions(), NoProgress);
 
         job.FilesUploaded.Should().Be(2);
+        drive.FolderExists(AppSettings.DefaultDriveFolderName).Should().BeTrue();
         var rootName = new DirectoryInfo(ws.Root).Name;
-        drive.FolderExists(rootName).Should().BeTrue();
-        var rootId = await drive.CreateFolderAsync(rootName);
-        drive.FolderExists("Imagens", rootId).Should().BeTrue();
-        drive.FolderExists("Documentos", rootId).Should().BeTrue();
-        drive.FileExists("photo.jpg", (await drive.CreateFolderAsync("Imagens", rootId))!).Should().BeTrue();
+        var driveRootId = await drive.CreateFolderAsync(AppSettings.DefaultDriveFolderName);
+        drive.FolderExists(rootName, driveRootId).Should().BeTrue();
+        var folderId = (await drive.CreateFolderAsync(rootName, driveRootId))!;
+        drive.FolderExists("Imagens", folderId).Should().BeTrue();
+        drive.FolderExists("Documentos", folderId).Should().BeTrue();
+        drive.FileExists("photo.jpg", (await drive.CreateFolderAsync("Imagens", folderId))!).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Uses_custom_drive_folder_name_from_options()
+    {
+        using var db = new TestDatabase();
+        using var ws = new TempWorkspace();
+        ws.WriteFile("a.txt", "alpha");
+        await AddFolderAsync(db, ws.Root);
+
+        var drive = new FakeGoogleDriveService();
+        await using var ctx = db.CreateContext();
+        var job = await new SyncService(ctx, drive)
+            .RunSyncAsync(new SyncRunOptions { DriveFolderName = "Meus Backups" }, NoProgress);
+
+        job.FilesUploaded.Should().Be(1);
+        drive.FolderExists("Meus Backups").Should().BeTrue();
+        drive.FolderExists(AppSettings.DefaultDriveFolderName).Should().BeFalse();
+
+        var customRootId = await drive.CreateFolderAsync("Meus Backups");
+        drive.FolderExists(new DirectoryInfo(ws.Root).Name, customRootId).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Blank_drive_folder_name_falls_back_to_default()
+    {
+        using var db = new TestDatabase();
+        using var ws = new TempWorkspace();
+        ws.WriteFile("a.txt", "alpha");
+        await AddFolderAsync(db, ws.Root);
+
+        var drive = new FakeGoogleDriveService();
+        await using var ctx = db.CreateContext();
+        await new SyncService(ctx, drive)
+            .RunSyncAsync(new SyncRunOptions { DriveFolderName = "   " }, NoProgress);
+
+        drive.FolderExists(AppSettings.DefaultDriveFolderName).Should().BeTrue();
     }
 }

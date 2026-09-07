@@ -109,15 +109,27 @@ public class SyncService : ISyncService
             (folderIndex * 100 / folderCount) + (fileCount == 0 ? 0 : fileIndex * 100 / fileCount / folderCount);
 
         var folderName = new DirectoryInfo(folder.Path).Name;
+        var rootFolderName = string.IsNullOrWhiteSpace(options.DriveFolderName)
+            ? AppSettings.DefaultDriveFolderName
+            : options.DriveFolderName.Trim();
         string? remoteFolderId = null;
 
         if (!options.DryRun)
         {
-            onProgressUpdate($"Preparando pasta '{folderName}' no Drive...", BaseProgress(0, 1));
-            remoteFolderId = await _driveService.CreateFolderAsync(folderName, null, cancellationToken);
+            onProgressUpdate($"Preparando pasta '{rootFolderName}/{folderName}' no Drive...", BaseProgress(0, 1));
+
+            var rootId = await _driveService.CreateFolderAsync(rootFolderName, null, cancellationToken);
+            if (rootId == null)
+            {
+                Log(job, OperationType.Error, null, $"Não foi possível criar a pasta '{rootFolderName}' no Drive.");
+                await _context.SaveChangesAsync(cancellationToken);
+                return;
+            }
+
+            remoteFolderId = await _driveService.CreateFolderAsync(folderName, rootId, cancellationToken);
             if (remoteFolderId == null)
             {
-                Log(job, OperationType.Error, null, $"Não foi possível criar a pasta '{folderName}' no Drive.");
+                Log(job, OperationType.Error, null, $"Não foi possível criar a pasta '{rootFolderName}/{folderName}' no Drive.");
                 await _context.SaveChangesAsync(cancellationToken);
                 return;
             }

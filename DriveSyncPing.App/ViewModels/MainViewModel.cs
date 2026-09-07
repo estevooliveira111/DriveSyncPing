@@ -42,6 +42,8 @@ public partial class MainViewModel : ViewModelBase
     // --- Settings (sections 9, 12) ---
     [ObservableProperty] private bool _deleteAfterUpload;
     [ObservableProperty] private bool _dryRun;
+    [ObservableProperty] private string _driveFolderName = AppSettings.DefaultDriveFolderName;
+
 
     // --- Schedule (section 13) ---
     [ObservableProperty] private bool _scheduleEnabled;
@@ -195,6 +197,7 @@ public partial class MainViewModel : ViewModelBase
         {
             DryRun = DryRun,
             DeleteAfterUpload = DeleteAfterUpload,
+            DriveFolderName = DriveFolderName,
             Trigger = SyncTrigger.Manual
         };
 
@@ -231,6 +234,7 @@ public partial class MainViewModel : ViewModelBase
         var settings = await _settingsService.GetAsync();
         DeleteAfterUpload = settings.DeleteAfterUpload;
         DryRun = settings.DryRunByDefault;
+        DriveFolderName = settings.DriveFolderName;
     }
 
     private async Task LoadScheduleAsync()
@@ -255,10 +259,16 @@ public partial class MainViewModel : ViewModelBase
     {
         if (_settingsService != null)
         {
+            var folderName = string.IsNullOrWhiteSpace(DriveFolderName)
+                ? AppSettings.DefaultDriveFolderName
+                : DriveFolderName.Trim();
+            DriveFolderName = folderName;
+
             await _settingsService.SaveAsync(new AppSettings
             {
                 DeleteAfterUpload = DeleteAfterUpload,
-                DryRunByDefault = DryRun
+                DryRunByDefault = DryRun,
+                DriveFolderName = folderName
             });
         }
 

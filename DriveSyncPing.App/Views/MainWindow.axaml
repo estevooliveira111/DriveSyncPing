@@ -172,6 +172,17 @@
             <TabItem Header="Configurações">
                 <Border Background="#181825" CornerRadius="8" Padding="20" Margin="0,10,0,0">
                     <StackPanel Spacing="18" MaxWidth="520" HorizontalAlignment="Left">
+                        <TextBlock Text="Pasta no Google Drive" FontWeight="SemiBold" FontSize="18"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                            <TextBlock Text="Nome da pasta:" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding DriveFolderName}" Width="240" PlaceholderText="DriveSyncPing"
+                                     Background="#313244" Foreground="#cdd6f4"/>
+                        </StackPanel>
+                        <TextBlock Text="Pasta criada na raiz do Drive que receberá todas as pastas sincronizadas. Padrão: DriveSyncPing."
+                                   FontSize="11" Foreground="#a6adc8" TextWrapping="Wrap"/>
+
+                        <Separator Background="#313244"/>
+
                         <TextBlock Text="Regras de upload e exclusão" FontWeight="SemiBold" FontSize="18"/>
                         <CheckBox IsChecked="{Binding DeleteAfterUpload}" Content="Excluir arquivos locais somente após o upload ser validado" Foreground="#cdd6f4"/>
                         <CheckBox IsChecked="{Binding DryRun}" Content="Iniciar sincronizações em modo simulação (dry-run) por padrão" Foreground="#cdd6f4"/>

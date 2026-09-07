@@ -60,6 +60,7 @@ public class Worker(ILogger<Worker> logger, IServiceScopeFactory scopeFactory) :
         {
             DryRun = settings.DryRunByDefault,
             DeleteAfterUpload = settings.DeleteAfterUpload,
+            DriveFolderName = settings.DriveFolderName,
             Trigger = DriveSyncPing.Domain.Enums.SyncTrigger.Scheduled
         };
 

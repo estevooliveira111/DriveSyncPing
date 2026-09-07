@@ -7,6 +7,7 @@ Com este aplicativo, o usuário pode escolher **quais pastas deseja enviar**, co
 ## 🚀 Funcionalidades Principais
 
 - 📁 **Seleção de Pastas:** Escolha facilmente as pastas locais a serem monitoradas.
+- ☁️ **Pasta de destino configurável:** Defina o nome da pasta criada na raiz do Drive (padrão: `DriveSyncPing`) na aba *Configurações*.
 - 🗂️ **Organização Flexível:** Agrupe arquivos por tipo, extensão ou data.
 - ☁️ **Upload Automático:** Sincronização direta com o Google Drive, criando as pastas necessárias automaticamente.
 - 🔍 **Identificação de Duplicados:** Validação via hash (SHA-256) para evitar reenvio de arquivos já existentes no Drive.
