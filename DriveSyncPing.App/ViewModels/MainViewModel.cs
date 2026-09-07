@@ -3,8 +3,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DriveSyncPing.Application.Services;
 using DriveSyncPing.Domain.Entities;
+using DriveSyncPing.Domain.Enums;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using System;
 
 namespace DriveSyncPing.App.ViewModels;
 
@@ -16,6 +20,8 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     private ObservableCollection<SyncFolder> _folders = new();
+
+    public List<OrganizationRule> AvailableRules { get; } = Enum.GetValues(typeof(OrganizationRule)).Cast<OrganizationRule>().ToList();
 
     [ObservableProperty]
     private string _googleDriveStatus = "Não conectado";
@@ -123,6 +129,15 @@ public partial class MainViewModel : ViewModelBase
         }
     }
 
+    // Called when the ComboBox selection changes
+    public void OnRuleChanged(SyncFolder folder, OrganizationRule rule)
+    {
+        if (folder != null && _folderService != null)
+        {
+            _ = _folderService.UpdateFolderRuleAsync(folder.Id, rule);
+        }
+    }
+
     [RelayCommand]
     private async Task RunSyncAsync()
     {
@@ -131,11 +146,19 @@ public partial class MainViewModel : ViewModelBase
         IsSyncing = true;
         SyncProgress = 0;
         
+        // Save current rules to DB
+        if (_folderService != null)
+        {
+            foreach (var folder in Folders)
+            {
+                await _folderService.UpdateFolderRuleAsync(folder.Id, folder.OrganizationRule);
+            }
+        }
+        
         await Task.Run(async () =>
         {
             await _syncService.RunSyncAsync((status, progress) =>
             {
-                // Update on UI thread
                 Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     SyncStatusText = status;

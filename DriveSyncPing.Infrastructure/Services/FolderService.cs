@@ -1,5 +1,6 @@
 using DriveSyncPing.Application.Services;
 using DriveSyncPing.Domain.Entities;
+using DriveSyncPing.Domain.Enums;
 using DriveSyncPing.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -29,9 +30,9 @@ public class FolderService : IFolderService
 
         var existing = await _context.SyncFolders.FirstOrDefaultAsync(f => f.Path == path);
         if (existing != null)
-            return existing; // Already added
+            return existing;
 
-        var folder = new SyncFolder { Path = path, IsEnabled = true };
+        var folder = new SyncFolder { Path = path, IsEnabled = true, OrganizationRule = OrganizationRule.None };
         _context.SyncFolders.Add(folder);
         await _context.SaveChangesAsync();
         
@@ -50,19 +51,27 @@ public class FolderService : IFolderService
 
     public Task<bool> ValidatePathAsync(string path)
     {
-        // Check if directory exists and we have permissions (simplistic check for MVP)
         if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
             return Task.FromResult(false);
 
         try
         {
-            // Test read permission
             Directory.GetDirectories(path);
             return Task.FromResult(true);
         }
         catch
         {
             return Task.FromResult(false);
+        }
+    }
+
+    public async Task UpdateFolderRuleAsync(int id, OrganizationRule rule)
+    {
+        var folder = await _context.SyncFolders.FindAsync(id);
+        if (folder != null)
+        {
+            folder.OrganizationRule = rule;
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -30,6 +30,34 @@ public class SyncService : ISyncService
         return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
     }
 
+    private string GetCategoryForExtension(string extension)
+    {
+        extension = extension.ToLowerInvariant().TrimStart('.');
+        
+        string[] images = { "jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff" };
+        string[] documents = { "pdf", "doc", "docx", "txt", "xls", "xlsx", "ppt", "pptx", "csv" };
+        string[] videos = { "mp4", "mkv", "avi", "mov", "wmv" };
+        string[] audios = { "mp3", "wav", "flac", "aac", "ogg" };
+
+        if (images.Contains(extension)) return "Imagens";
+        if (documents.Contains(extension)) return "Documentos";
+        if (videos.Contains(extension)) return "Vídeos";
+        if (audios.Contains(extension)) return "Áudios";
+        
+        return "Outros";
+    }
+
+    private string GetSubfolderName(FileInfo fileInfo, OrganizationRule rule)
+    {
+        return rule switch
+        {
+            OrganizationRule.ByExtension => string.IsNullOrEmpty(fileInfo.Extension) ? "SemExtensao" : fileInfo.Extension.TrimStart('.').ToUpperInvariant(),
+            OrganizationRule.ByType => GetCategoryForExtension(fileInfo.Extension),
+            OrganizationRule.ByDate => fileInfo.LastWriteTimeUtc.ToString("yyyy-MM"),
+            _ => string.Empty
+        };
+    }
+
     public async Task RunSyncAsync(Action<string, int> onProgressUpdate)
     {
         onProgressUpdate("Iniciando sincronização...", 0);
@@ -59,7 +87,7 @@ public class SyncService : ISyncService
                 if (!Directory.Exists(folder.Path)) continue;
 
                 var folderName = new DirectoryInfo(folder.Path).Name;
-                onProgressUpdate($"Criando pasta '{folderName}' no Drive...", currentFolderIndex * 100 / totalFolders);
+                onProgressUpdate($"Criando pasta raiz '{folderName}' no Drive...", currentFolderIndex * 100 / totalFolders);
 
                 var remoteFolderId = await _driveService.CreateFolderAsync(folderName);
                 if (remoteFolderId == null) continue;
@@ -96,13 +124,11 @@ public class SyncService : ISyncService
                     }
                     else if (syncFile.HashSha256 == hash && syncFile.Status == SyncStatus.Synced)
                     {
-                        // File hasn't changed and is synced
                         currentFileIndex++;
                         continue;
                     }
                     else
                     {
-                        // File changed
                         syncFile.HashSha256 = hash;
                         syncFile.SizeBytes = fileInfo.Length;
                         syncFile.LastModified = fileInfo.LastWriteTimeUtc;
@@ -110,14 +136,26 @@ public class SyncService : ISyncService
                         await _context.SaveChangesAsync();
                     }
 
-                    // Upload
                     onProgressUpdate($"Enviando {fileName}...", (currentFolderIndex * 100 / totalFolders) + (currentFileIndex * 100 / (totalFiles > 0 ? totalFiles : 1) / totalFolders));
                     
                     try
                     {
-                        var remoteId = await _driveService.UploadFileAsync(filePath, remoteFolderId, (sent, total) => 
+                        // Determine Target Subfolder
+                        string targetFolderId = remoteFolderId;
+                        string subfolderName = GetSubfolderName(fileInfo, folder.OrganizationRule);
+
+                        if (!string.IsNullOrEmpty(subfolderName))
                         {
-                            // Optional: detailed byte progress here
+                            var subfolderId = await _driveService.CreateFolderAsync(subfolderName, remoteFolderId);
+                            if (subfolderId != null)
+                            {
+                                targetFolderId = subfolderId;
+                            }
+                        }
+
+                        var remoteId = await _driveService.UploadFileAsync(filePath, targetFolderId, (sent, total) => 
+                        {
+                            // Optional progress
                         });
 
                         syncFile.Status = SyncStatus.Synced;
