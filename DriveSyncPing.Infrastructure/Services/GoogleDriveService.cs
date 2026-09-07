@@ -99,7 +99,12 @@ public class GoogleDriveService : IGoogleDriveService
         {
             Name = fileName,
             Parents = new[] { remoteFolderId },
-            AppProperties = new Dictionary<string, string> { [HashPropertyKey] = sha256 }
+            AppProperties = new Dictionary<string, string> 
+            { 
+                [HashPropertyKey] = sha256,
+                ["signature"] = "DriveSyncPing",
+                ["backupDate"] = DateTime.UtcNow.ToString("O")
+            }
         };
 
         long totalBytes = new FileInfo(localFilePath).Length;
