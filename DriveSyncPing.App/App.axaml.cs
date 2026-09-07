@@ -3,11 +3,19 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using DriveSyncPing.App.ViewModels;
 using DriveSyncPing.App.Views;
+using DriveSyncPing.Application.Services;
+using DriveSyncPing.Infrastructure.Data;
+using DriveSyncPing.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace DriveSyncPing.App;
 
 public partial class App : Avalonia.Application
 {
+    public static IServiceProvider? Services { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -15,11 +23,29 @@ public partial class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        var services = new ServiceCollection();
+
+        // Infrastructure
+        services.AddDriveSyncPingDatabase();
+        services.AddTransient<IFolderService, FolderService>();
+
+        // ViewModels
+        services.AddTransient<MainViewModel>();
+
+        Services = services.BuildServiceProvider();
+
+        // Migrate DB on startup
+        using (var scope = Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+        }
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel(),
+                DataContext = Services.GetRequiredService<MainViewModel>(),
             };
         }
 

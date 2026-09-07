@@ -6,17 +6,55 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="DriveSyncPing.App.Views.MainWindow"
         x:DataType="vm:MainViewModel"
+        x:Name="Root"
         Icon="/Assets/avalonia-logo.ico"
-        Title="DriveSyncPing.App">
+        Title="DriveSyncPing"
+        Background="#1e1e2e"
+        Foreground="#cdd6f4">
 
     <Design.DataContext>
         <!-- This only sets the DataContext for the previewer in an IDE,
              to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
+        <vm:MainViewModel/>
     </Design.DataContext>
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="DriveSyncPing" FontSize="28" FontWeight="Bold" Foreground="#89b4fa"/>
+            <TextBlock Text="Selecione as pastas que deseja sincronizar com o Google Drive." FontSize="14" Foreground="#a6adc8"/>
+        </StackPanel>
 
+        <!-- Folder List -->
+        <Border Grid.Row="1" Background="#181825" CornerRadius="8" Padding="10">
+            <Grid RowDefinitions="Auto,*">
+                <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,10">
+                    <TextBlock Text="Pastas Configuradas" FontWeight="SemiBold" VerticalAlignment="Center" FontSize="16"/>
+                    <Button Grid.Column="1" Command="{Binding AddFolderCommand}" Background="#a6e3a1" Foreground="#11111b" FontWeight="Bold" CornerRadius="4">
+                        + Adicionar Pasta
+                    </Button>
+                </Grid>
+
+                <ListBox Grid.Row="1" ItemsSource="{Binding Folders}" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,5">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Path}" FontWeight="Medium"/>
+                                    <TextBlock Text="Ativa" Foreground="#a6e3a1" FontSize="12" IsVisible="{Binding IsEnabled}"/>
+                                    <TextBlock Text="Inativa" Foreground="#f38ba8" FontSize="12" IsVisible="{Binding !IsEnabled}"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding #Root.((vm:MainViewModel)DataContext).RemoveFolderCommand}" CommandParameter="{Binding}" Background="#f38ba8" Foreground="#11111b" CornerRadius="4">
+                                    Remover
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Status -->
+        <TextBlock Grid.Row="2" Text="Pronto" Foreground="#a6adc8" Margin="0,10,0,0" FontSize="12"/>
+    </Grid>
 </Window>
