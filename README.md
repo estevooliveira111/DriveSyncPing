@@ -47,12 +47,24 @@ O projeto utiliza **C# / .NET** com foco em ser multiplataforma. Foi estruturado
    dotnet build DriveSyncPing.slnx
    ```
 
-3. **Inicie o Aplicativo Desktop:**
+3. **Configure as credenciais do Google:** crie um arquivo `.env` na raiz com
+   ```env
+   GOOGLE_CLIENT_ID="seu-client-id.apps.googleusercontent.com"
+   GOOGLE_CLIENT_SECRET="seu-client-secret"
+   ```
+
+4. **Inicie o Aplicativo Desktop:**
    ```bash
    dotnet run --project DriveSyncPing.App
    ```
 
-4. *(Opcional) Executar testes:*
+5. **(Opcional) Inicie o serviço de agendamento** — dispara a sincronização automática
+   nos dias/horários definidos na aba *Configurações*:
+   ```bash
+   dotnet run --project DriveSyncPing.Worker
+   ```
+
+6. *(Opcional) Executar testes:*
    ```bash
    dotnet test DriveSyncPing.Tests
    ```

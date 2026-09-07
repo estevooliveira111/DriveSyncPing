@@ -33,6 +33,12 @@ public sealed class FakeGoogleDriveService : IGoogleDriveService
     /// <summary>Names that should throw on upload, to exercise failure handling.</summary>
     public HashSet<string> FailUploadForNames { get; } = new();
 
+    public bool FolderExists(string name, string? parentId = null) =>
+        _nodes.Any(n => n.IsFolder && n.Name == name && n.ParentId == (parentId ?? "root"));
+
+    public bool FileExists(string name, string parentId) =>
+        _nodes.Any(n => !n.IsFolder && n.Name == name && n.ParentId == parentId);
+
     /// <summary>Seeds an already-existing remote file so duplicate detection can be tested.</summary>
     public void SeedFile(string folderId, string name, long size, string? sha256)
     {

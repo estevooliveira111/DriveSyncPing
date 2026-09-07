@@ -19,7 +19,7 @@ public class ScheduleService : IScheduleService
 
     public async Task<ScheduleConfig> GetAsync()
     {
-        var config = await _context.ScheduleConfigs.FirstOrDefaultAsync();
+        var config = await _context.ScheduleConfigs.OrderBy(c => c.Id).FirstOrDefaultAsync();
         if (config == null)
         {
             config = new ScheduleConfig();
@@ -31,7 +31,7 @@ public class ScheduleService : IScheduleService
 
     public async Task SaveAsync(ScheduleConfig config)
     {
-        var existing = await _context.ScheduleConfigs.FirstOrDefaultAsync();
+        var existing = await _context.ScheduleConfigs.OrderBy(c => c.Id).FirstOrDefaultAsync();
         if (existing == null)
         {
             _context.ScheduleConfigs.Add(config);
@@ -48,7 +48,7 @@ public class ScheduleService : IScheduleService
 
     public async Task<bool> IsRunDueAsync(DateTime nowLocal)
     {
-        var config = await _context.ScheduleConfigs.AsNoTracking().FirstOrDefaultAsync();
+        var config = await _context.ScheduleConfigs.AsNoTracking().OrderBy(c => c.Id).FirstOrDefaultAsync();
         if (config is not { IsEnabled: true })
             return false;
 

@@ -258,8 +258,11 @@ public class SyncServiceTests
         var job = await new SyncService(ctx, drive).RunSyncAsync(new SyncRunOptions(), NoProgress);
 
         job.FilesUploaded.Should().Be(2);
-        var rootId = await drive.CreateFolderAsync(new DirectoryInfo(ws.Root).Name);
-        (await drive.CreateFolderAsync("Imagens", rootId)).Should().NotBeNull();
-        (await drive.CreateFolderAsync("Documentos", rootId)).Should().NotBeNull();
+        var rootName = new DirectoryInfo(ws.Root).Name;
+        drive.FolderExists(rootName).Should().BeTrue();
+        var rootId = await drive.CreateFolderAsync(rootName);
+        drive.FolderExists("Imagens", rootId).Should().BeTrue();
+        drive.FolderExists("Documentos", rootId).Should().BeTrue();
+        drive.FileExists("photo.jpg", (await drive.CreateFolderAsync("Imagens", rootId))!).Should().BeTrue();
     }
 }

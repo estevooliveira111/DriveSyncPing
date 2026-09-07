@@ -4,7 +4,8 @@ using DriveSyncPing.Infrastructure.Services;
 using DriveSyncPing.Worker;
 using Microsoft.EntityFrameworkCore;
 
-DotNetEnv.Env.TraversePath().Load();
+DotNetEnv.Env.Load("../.env");
+DotNetEnv.Env.Load(".env");
 
 var builder = Host.CreateApplicationBuilder(args);
 

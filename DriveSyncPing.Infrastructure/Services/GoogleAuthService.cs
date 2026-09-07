@@ -1,5 +1,4 @@
 using DriveSyncPing.Application.Services;
-using DriveSyncPing.Infrastructure.Data;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
@@ -13,15 +12,9 @@ namespace DriveSyncPing.Infrastructure.Services;
 
 public class GoogleAuthService : IGoogleAuthService
 {
-    private readonly AppDbContext _context;
     private static readonly string[] Scopes = { DriveService.Scope.DriveFile };
     private UserCredential? _credential;
     private DriveService? _driveService;
-
-    public GoogleAuthService(AppDbContext context)
-    {
-        _context = context;
-    }
 
     private async Task<UserCredential?> GetCredentialAsync()
     {
