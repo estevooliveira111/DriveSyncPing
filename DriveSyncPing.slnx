@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="DriveSyncPing.App/DriveSyncPing.App.csproj" />
+  <Project Path="DriveSyncPing.Application/DriveSyncPing.Application.csproj" />
+  <Project Path="DriveSyncPing.Domain/DriveSyncPing.Domain.csproj" />
+  <Project Path="DriveSyncPing.Infrastructure/DriveSyncPing.Infrastructure.csproj" />
+  <Project Path="DriveSyncPing.Tests/DriveSyncPing.Tests.csproj" />
+  <Project Path="DriveSyncPing.Worker/DriveSyncPing.Worker.csproj" />
+</Solution>
