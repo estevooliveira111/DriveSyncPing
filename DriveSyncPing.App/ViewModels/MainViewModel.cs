@@ -10,20 +10,65 @@ namespace DriveSyncPing.App.ViewModels;
 
 public partial class MainViewModel : ViewModelBase
 {
-    private readonly IFolderService _folderService;
+    private readonly IFolderService? _folderService;
+    private readonly IGoogleAuthService? _authService;
 
     [ObservableProperty]
     private ObservableCollection<SyncFolder> _folders = new();
 
-    public MainViewModel(IFolderService folderService)
+    [ObservableProperty]
+    private string _googleDriveStatus = "Não conectado";
+
+    [ObservableProperty]
+    private bool _isConnected = false;
+
+    public MainViewModel(IFolderService folderService, IGoogleAuthService authService)
     {
         _folderService = folderService;
+        _authService = authService;
+        
         _ = LoadFoldersAsync();
+        _ = CheckAuthStatusAsync();
     }
 
-    // Designer constructor
     public MainViewModel()
     {
+    }
+
+    private async Task CheckAuthStatusAsync()
+    {
+        if (_authService == null) return;
+        IsConnected = await _authService.IsConnectedAsync();
+        GoogleDriveStatus = IsConnected ? "Conectado ao Google Drive" : "Não conectado";
+    }
+
+    [RelayCommand]
+    private async Task LoginGoogleAsync()
+    {
+        if (_authService == null) return;
+        
+        GoogleDriveStatus = "Conectando...";
+        var result = await _authService.LoginAsync();
+        
+        if (result != null && result.StartsWith("Erro"))
+        {
+            GoogleDriveStatus = result;
+            IsConnected = false;
+        }
+        else
+        {
+            IsConnected = true;
+            GoogleDriveStatus = "Conectado ao Google Drive";
+        }
+    }
+
+    [RelayCommand]
+    private async Task LogoutGoogleAsync()
+    {
+        if (_authService == null) return;
+        await _authService.LogoutAsync();
+        IsConnected = false;
+        GoogleDriveStatus = "Não conectado";
     }
 
     private async Task LoadFoldersAsync()
@@ -47,11 +92,10 @@ public partial class MainViewModel : ViewModelBase
             if (result != null && result.Count > 0)
             {
                 var folderPath = result[0].Path.LocalPath;
-                var addedFolder = await _folderService.AddFolderAsync(folderPath);
+                var addedFolder = await _folderService?.AddFolderAsync(folderPath)!;
                 
                 if (addedFolder != null)
                 {
-                    // Refresh
                     await LoadFoldersAsync();
                 }
             }
@@ -61,7 +105,7 @@ public partial class MainViewModel : ViewModelBase
     [RelayCommand]
     private async Task RemoveFolderAsync(SyncFolder folder)
     {
-        if (folder != null)
+        if (folder != null && _folderService != null)
         {
             await _folderService.RemoveFolderAsync(folder.Id);
             Folders.Remove(folder);

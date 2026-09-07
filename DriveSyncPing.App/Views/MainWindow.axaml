@@ -12,18 +12,20 @@
         Background="#1e1e2e"
         Foreground="#cdd6f4">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel/>
-    </Design.DataContext>
-
     <Grid RowDefinitions="Auto,*,Auto" Margin="20">
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock Text="DriveSyncPing" FontSize="28" FontWeight="Bold" Foreground="#89b4fa"/>
-            <TextBlock Text="Selecione as pastas que deseja sincronizar com o Google Drive." FontSize="14" Foreground="#a6adc8"/>
-        </StackPanel>
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="DriveSyncPing" FontSize="28" FontWeight="Bold" Foreground="#89b4fa"/>
+                <TextBlock Text="Selecione as pastas que deseja sincronizar com o Google Drive." FontSize="14" Foreground="#a6adc8"/>
+            </StackPanel>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="{Binding GoogleDriveStatus}" VerticalAlignment="Center" FontSize="12" Foreground="#f9e2af"/>
+                <Button Command="{Binding LoginGoogleCommand}" IsVisible="{Binding !IsConnected}" Background="#89b4fa" Foreground="#11111b" FontWeight="Bold">Conectar</Button>
+                <Button Command="{Binding LogoutGoogleCommand}" IsVisible="{Binding IsConnected}" Background="#f38ba8" Foreground="#11111b" FontWeight="Bold">Desconectar</Button>
+            </StackPanel>
+        </Grid>
 
         <!-- Folder List -->
         <Border Grid.Row="1" Background="#181825" CornerRadius="8" Padding="10">
