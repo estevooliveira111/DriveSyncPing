@@ -12,6 +12,7 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly IFolderService? _folderService;
     private readonly IGoogleAuthService? _authService;
+    private readonly ISyncService? _syncService;
 
     [ObservableProperty]
     private ObservableCollection<SyncFolder> _folders = new();
@@ -22,10 +23,20 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isConnected = false;
 
-    public MainViewModel(IFolderService folderService, IGoogleAuthService authService)
+    [ObservableProperty]
+    private string _syncStatusText = "Pronto";
+
+    [ObservableProperty]
+    private int _syncProgress = 0;
+
+    [ObservableProperty]
+    private bool _isSyncing = false;
+
+    public MainViewModel(IFolderService folderService, IGoogleAuthService authService, ISyncService syncService)
     {
         _folderService = folderService;
         _authService = authService;
+        _syncService = syncService;
         
         _ = LoadFoldersAsync();
         _ = CheckAuthStatusAsync();
@@ -110,5 +121,29 @@ public partial class MainViewModel : ViewModelBase
             await _folderService.RemoveFolderAsync(folder.Id);
             Folders.Remove(folder);
         }
+    }
+
+    [RelayCommand]
+    private async Task RunSyncAsync()
+    {
+        if (_syncService == null) return;
+        
+        IsSyncing = true;
+        SyncProgress = 0;
+        
+        await Task.Run(async () =>
+        {
+            await _syncService.RunSyncAsync((status, progress) =>
+            {
+                // Update on UI thread
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    SyncStatusText = status;
+                    SyncProgress = progress;
+                });
+            });
+        });
+        
+        IsSyncing = false;
     }
 }

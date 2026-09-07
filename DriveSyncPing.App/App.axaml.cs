@@ -29,6 +29,8 @@ public partial class App : Avalonia.Application
         services.AddDriveSyncPingDatabase();
         services.AddTransient<IFolderService, FolderService>();
         services.AddSingleton<IGoogleAuthService, GoogleAuthService>();
+        services.AddTransient<IGoogleDriveService, GoogleDriveService>();
+        services.AddTransient<ISyncService, SyncService>();
 
         // ViewModels
         services.AddTransient<MainViewModel>();
